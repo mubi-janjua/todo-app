@@ -36,6 +36,7 @@ export class TodoController {
       status: Body.status,
       createdAt: Body.createdAt,
       updatedAt: Body.updatedAt,
+      userId: request.user.id,
     });
   }
 

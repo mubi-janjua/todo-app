@@ -126,8 +126,9 @@ export class TodoService {
     }));
   }
 
-  async searchTodo({ title, status, createdAt, updatedAt }) {
+  async searchTodo({ userId, title, status, createdAt, updatedAt }) {
     const queryBuilder = this.todoRepository.createQueryBuilder('todo');
+    queryBuilder.andWhere('todo.userId = :userId', { userId });
 
     if (title) {
       queryBuilder.andWhere('todo.title ILIKE :title', { title: `%${title}%` });
