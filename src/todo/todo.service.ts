@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { Todo } from './entities/todo.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 @Injectable()
 export class TodoService {
   constructor(@InjectRepository(Todo) private readonly todoRepository: Repository<Todo>) {}
@@ -66,8 +67,8 @@ export class TodoService {
       .returning(['id', 'title', 'description'])
       .execute();
 
-    if (!updatedTodo.affected || updatedTodo.affected === 0) {
-      return null;
+    if (!updatedTodo) {
+      throw new HttpException('Note not found!', HttpStatus.BAD_REQUEST);
     }
 
     return {
@@ -77,16 +78,16 @@ export class TodoService {
     };
   }
 
-  async remove(id: number) {
-    const todo = await this.todoRepository.findOne({ id });
+  async remove({ id, userId }) {
+    const todo = await this.todoRepository.findOne({ id, userId });
     if (!todo) {
-      return null; // Todo item not found
+      throw new HttpException('Note not found!', HttpStatus.BAD_REQUEST);
     }
 
     todo.deletedAt = new Date();
     await this.todoRepository.save(todo);
 
-    return todo;
+    return { message: 'Note deleted successfully!' };
   }
 
   async undoTodoById(id: number) {
@@ -99,29 +100,69 @@ export class TodoService {
       .execute();
 
     if (!updatedTodo.raw.length) {
-      return null; // Todo item not found
+      throw new HttpException('Note not found!', HttpStatus.BAD_REQUEST);
     }
 
-    const updatedTodoItem = updatedTodo.raw[0];
-
-    return updatedTodoItem;
+    return { message: 'Note undo successfully!' };
   }
 
   async getTodosByUserId({ userId }) {
     const todosWithUserInfo = await this.todoRepository
       .createQueryBuilder('todo')
-      .select(['todo.id', 'todo.title', 'todo.description', 'user.id', 'user.name', 'user.email'])
+      .select(['todo.id', 'todo.title', 'todo.description', 'todo.status', 'user.id', 'user.firstName', 'user.email'])
       .where({ userId })
       .leftJoin('todo.user', 'user')
+      .orderBy('todo.createdAt', 'DESC')
       .getRawMany();
 
     return todosWithUserInfo.map((row) => ({
       id: row.todo_id,
       title: row.todo_title,
       description: row.todo_description,
+      status: row.todo_status,
       userId: row.user_id,
       userName: row.user_name,
       userEmail: row.user_email,
     }));
   }
+
+  async searchTodo({ title, status, createdAt, updatedAt }) {
+    const queryBuilder = this.todoRepository.createQueryBuilder('todo');
+
+    if (title) {
+      queryBuilder.andWhere('todo.title ILIKE :title', { title: `%${title}%` });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('todo.status = :status', { status });
+    }
+
+    if (createdAt) {
+      queryBuilder.andWhere('DATE(todo.createdAt) = :createdAt', { createdAt });
+    }
+
+    if (updatedAt) {
+      queryBuilder.andWhere('DATE(todo.updatedAt) = :updatedAt', { updatedAt });
+    }
+
+    queryBuilder.leftJoinAndSelect('todo.user', 'user');
+    queryBuilder.orderBy('todo.createdAt', 'DESC');
+
+    const todosWithUserInfo = await queryBuilder.getMany();
+    return todosWithUserInfo.map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      status: row.status,
+      userId: row.user.id,
+      userName: row.user.firstName,
+      userEmail: row.user.email,
+    }));
+  }
+
+  // async getTodos(payload) {
+  //   if (payload.title && payload.status === null && payload.createdAt === null && payload.updatedAt === null)
+  //     return await this.searchTodo(payload);
+  //   return await this.getTodosByUserId({ userId: payload.userId });
+  // }
 }

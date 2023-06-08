@@ -1,14 +1,11 @@
 import { IsOptional, IsString } from 'class-validator';
 
-export class UpdateTodoDto {
+export class UpdateUserDto {
   @IsOptional()
   @IsString()
-  title: string;
+  firstName: string;
 
   @IsOptional()
   @IsString()
-  description: string;
-
-  @IsOptional()
-  status: boolean;
+  lastName: string;
 }

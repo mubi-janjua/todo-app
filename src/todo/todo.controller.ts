@@ -16,8 +16,11 @@ export class TodoController {
   }
 
   @Get()
-  findAll() {
-    return this.todoService.findAll();
+  @UseGuards(AuthGuard('jwt'))
+  findAll(@Req() request) {
+    return this.todoService.getTodosByUserId({
+      userId: request.user.id,
+    });
   }
 
   @Get(':id')
@@ -25,20 +28,27 @@ export class TodoController {
     return this.todoService.findOne(+id);
   }
 
-  @Post('todosByUserId')
+  @Post('search')
   @UseGuards(AuthGuard('jwt'))
-  todosByUserId(@Req() request) {
-    return this.todoService.getTodosByUserId({ userId: request.user.id });
+  searchTodo(@Req() request, @Body() Body) {
+    return this.todoService.searchTodo({
+      title: Body.title,
+      status: Body.status,
+      createdAt: Body.createdAt,
+      updatedAt: Body.updatedAt,
+    });
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTodoDto) {
+  @UseGuards(AuthGuard('jwt'))
+  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTodoDto, @Req() request) {
     return this.todoService.update(+id, updateTaskDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.todoService.remove(+id);
+  @UseGuards(AuthGuard('jwt'))
+  remove(@Param('id') id: string, @Req() request) {
+    return this.todoService.remove({ id, userId: request.user.id });
   }
 
   @Get('undo/:id')

@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersDTO } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
+import { UpdateTodoDto } from '../todo/dto/update-todo.dto';
+import { Todo } from '../todo/entities/todo.entity';
 
 // This should be a real class/interface representing a user entity
 // export type User = any;
@@ -14,7 +16,6 @@ export class UsersService {
   create(createUserDto: UsersDTO): Promise<User> {
     const user = new User();
 
-    user.name = createUserDto.name;
     user.email = createUserDto.email;
     user.password = createUserDto.password;
 
@@ -33,5 +34,14 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     await this.usersRepository.delete(id);
+  }
+
+  async update({ userId, updateUserDto }) {
+    const updatedUser = await this.usersRepository.createQueryBuilder().update(User).set(updateUserDto).where({ id: userId }).execute();
+
+    if (!updatedUser) {
+      return null;
+    }
+    return { msg: 'user has been updated!' };
   }
 }

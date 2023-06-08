@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Status } from '../enums/status.enum';
 
 @Entity()
 export class Todo {
@@ -26,5 +27,7 @@ export class Todo {
 
   @Column({ type: 'int' })
   userId: number;
+
+  @Column({ default: false })
+  status: boolean;
 }
-// export class Task {}

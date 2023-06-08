@@ -1,13 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  Unique,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { Todo } from '../../todo/entities/todo.entity';
 
 @Entity()
@@ -16,8 +7,11 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  name: string;
+  @Column({ default: null })
+  firstName: string;
+
+  @Column({ default: null })
+  lastName: string;
 
   @Column()
   email: string;

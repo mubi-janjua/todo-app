@@ -2,9 +2,8 @@ import { Body, Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
 import { JwtAuthGuard } from './auth/strategy/jwt-auth.guard';
-import { RolesGuard } from './auth/strategy/roles.guard';
-import { Roles } from './custom.decorator';
-import { Role } from './users/enums/role.enum';
+// import { RolesGuard } from './auth/strategy/roles.guard';
+// import { Roles } from './custom.decorator';
 
 @Controller()
 export class AppController {
@@ -26,8 +25,7 @@ export class AppController {
   }
 
   @Get('/premium-echo')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.premium)
+  @UseGuards(JwtAuthGuard)
   getPremiumEcho(@Req() req, @Res() res, @Body() body) {
     res.status(200).json(body);
   }
